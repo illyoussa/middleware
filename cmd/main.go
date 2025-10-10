@@ -1,12 +1,13 @@
 package main
 
 import (
-	"github.com/go-chi/chi/v5"
-	"github.com/sirupsen/logrus"
 	"middleware/example/internal/controllers/users"
 	"middleware/example/internal/helpers"
 	_ "middleware/example/internal/models"
 	"net/http"
+
+	"github.com/go-chi/chi/v5"
+	"github.com/sirupsen/logrus"
 )
 
 func main() {
@@ -30,7 +31,7 @@ func init() {
 		logrus.Fatalf("error while opening database : %s", err.Error())
 	}
 	schemes := []string{
-		`CREATE TABLE IF NOT EXISTS users (
+		`CREATE TABLE IF NOT EXISTS alerts (
 			id VARCHAR(255) PRIMARY KEY NOT NULL UNIQUE,
 			name VARCHAR(255) NOT NULL
 		);`,
