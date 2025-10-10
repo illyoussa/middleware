@@ -1,3 +1,12 @@
+# Setup Golang
+
+#!/bin/sh
+curl https://dl.google.com/go/go1.23.1.linux-amd64.tar.gz -o ~/go.tar.gz
+tar -xvzf ~/go.tar.gz -C ~
+echo "export PATH=$PATH:~/go/bin" >> ~/.bashrc
+rm ~/go.tar.gz
+
+
 # Timetable Alerter
 
 Everything you need to build a Svelte project, powered by [`sv`](https://github.com/sveltejs/cli).
