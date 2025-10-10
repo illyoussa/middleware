@@ -1,57 +1,26 @@
-# Setup Golang
+# TP middleware example
 
-/bin/sh
+## Run
 
-curl https://dl.google.com/go/go1.23.1.linux-amd64.tar.gz -o ~/go.tar.gz 
-
-tar -xvzf ~/go.tar.gz -C ~
-
-echo "export PATH=$PATH:~/go/bin" >> ~/.bashrc
-
-rm ~/go.tar.gz
-
-
-# Timetable Alerter
-
-Everything you need to build a Svelte project, powered by [`sv`](https://github.com/sveltejs/cli).
-
-## Developing
-
-Once you've created a project and installed dependencies with `npm install` (or `pnpm install` or `yarn`), start a development server:
-
-```bash
-npm run dev
-
-# or start the server and open the app in a new browser tab
-npm run dev -- --open
+Tidy / download modules :
+```
+go mod tidy
+```
+Build & run :
+```
+go run cmd/main.go
 ```
 
-## Building
-
-To create a production version of your app:
-
-```bash
-npm run build
+---
+Or build : 
+```
+go build -o middleware_users cmd/main.go
+```
+Then run : 
+```
+./middleware_users
 ```
 
-You can preview the production build with `npm run preview`.
+## Documentation
 
-> To deploy your app, you may need to install an [adapter](https://svelte.dev/docs/kit/adapters) for your target environment.
-
-## Creating a project
-
-If you're seeing this, you've probably already done this step. Congrats!
-
-```bash
-# create a new project in the current directory
-npx sv create
-
-# create a new project in my-app
-npx sv create my-app
-```
-
-## Dependencies 
-
-* [Bootswatch](https://bootswatch.com)  
-* [Amazing Calendar librairy](https://github.com/vkurko/calendar?tab=readme-ov-file)
-* [Flowbite for some components](https://flowbite-svelte.com/docs/components/accordion)
+Documentation is visible in **api** directory ([here](api/swagger.json)).
