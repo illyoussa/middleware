@@ -1,0 +1,142 @@
+{
+  ".svelte-kit/generated/server/internal.js": {
+    "file": "internal.js",
+    "name": "internal",
+    "src": ".svelte-kit/generated/server/internal.js",
+    "isEntry": true,
+    "imports": [
+      "_internal.js"
+    ]
+  },
+  "_client.js": {
+    "file": "chunks/client.js",
+    "name": "client",
+    "imports": [
+      "_exports.js",
+      "_index2.js",
+      "_index.js"
+    ]
+  },
+  "_delete-modal.js": {
+    "file": "chunks/delete-modal.js",
+    "name": "delete-modal",
+    "imports": [
+      "_index.js",
+      "_index-server.js"
+    ]
+  },
+  "_exports.js": {
+    "file": "chunks/exports.js",
+    "name": "exports"
+  },
+  "_index-server.js": {
+    "file": "chunks/index-server.js",
+    "name": "index-server",
+    "imports": [
+      "_index.js",
+      "_index2.js"
+    ]
+  },
+  "_index.js": {
+    "file": "chunks/index.js",
+    "name": "index"
+  },
+  "_index2.js": {
+    "file": "chunks/index2.js",
+    "name": "index",
+    "imports": [
+      "_index.js"
+    ]
+  },
+  "_internal.js": {
+    "file": "chunks/internal.js",
+    "name": "internal",
+    "imports": [
+      "_index.js"
+    ]
+  },
+  "node_modules/@sveltejs/kit/src/runtime/components/svelte-5/error.svelte": {
+    "file": "entries/fallbacks/error.svelte.js",
+    "name": "entries/fallbacks/error.svelte",
+    "src": "node_modules/@sveltejs/kit/src/runtime/components/svelte-5/error.svelte",
+    "isEntry": true,
+    "imports": [
+      "_index.js",
+      "_client.js"
+    ]
+  },
+  "node_modules/@sveltejs/kit/src/runtime/server/index.js": {
+    "file": "index.js",
+    "name": "index",
+    "src": "node_modules/@sveltejs/kit/src/runtime/server/index.js",
+    "isEntry": true,
+    "imports": [
+      "_index.js",
+      "_internal.js",
+      "_exports.js",
+      "_index2.js"
+    ]
+  },
+  "src/routes/+layout.server.js": {
+    "file": "entries/pages/_layout.server.js",
+    "name": "entries/pages/_layout.server",
+    "src": "src/routes/+layout.server.js",
+    "isEntry": true
+  },
+  "src/routes/+layout.svelte": {
+    "file": "entries/pages/_layout.svelte.js",
+    "name": "entries/pages/_layout.svelte",
+    "src": "src/routes/+layout.svelte",
+    "isEntry": true,
+    "imports": [
+      "_index.js",
+      "_client.js"
+    ],
+    "css": [
+      "_app/immutable/assets/_layout.C1IPNx-7.css"
+    ]
+  },
+  "src/routes/+page.svelte": {
+    "file": "entries/pages/_page.svelte.js",
+    "name": "entries/pages/_page.svelte",
+    "src": "src/routes/+page.svelte",
+    "isEntry": true
+  },
+  "src/routes/agendas/+page.svelte": {
+    "file": "entries/pages/agendas/_page.svelte.js",
+    "name": "entries/pages/agendas/_page.svelte",
+    "src": "src/routes/agendas/+page.svelte",
+    "isEntry": true,
+    "imports": [
+      "_index.js",
+      "_index-server.js",
+      "_delete-modal.js"
+    ]
+  },
+  "src/routes/alerts/+page.svelte": {
+    "file": "entries/pages/alerts/_page.svelte.js",
+    "name": "entries/pages/alerts/_page.svelte",
+    "src": "src/routes/alerts/+page.svelte",
+    "isEntry": true,
+    "imports": [
+      "_index.js",
+      "_index2.js",
+      "_delete-modal.js",
+      "_index-server.js"
+    ]
+  },
+  "src/routes/events/+page.svelte": {
+    "file": "entries/pages/events/_page.svelte.js",
+    "name": "entries/pages/events/_page.svelte",
+    "src": "src/routes/events/+page.svelte",
+    "isEntry": true,
+    "imports": [
+      "_index.js",
+      "_index2.js",
+      "_index-server.js"
+    ],
+    "css": [
+      "_app/immutable/assets/_page.DwDozJLS.css"
+    ]
+  }
+}

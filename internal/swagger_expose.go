@@ -8,4 +8,5 @@ package internal
 // @contact.email  justine.bachelard@ext.uca.fr
 
 // @schemes   http
-// @BasePath  /
+// @BasePath  /api/v1
+

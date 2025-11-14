@@ -1,0 +1,1 @@
+import{a,t as o}from"../chunks/disclose-version.wNEiCm-t.js";import"../chunks/legacy.B129RShy.js";var p=o('<h1 class="text-center">Welcome !</h1>');function n(t){var e=p();a(t,e)}export{n as component};
