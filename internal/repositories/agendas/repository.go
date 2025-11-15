@@ -1,75 +1,90 @@
 package agendas
 
 import (
-    "database/sql"
-    "middleware/example/internal/helpers"
-    "middleware/example/internal/models"
+	"middleware/example/internal/helpers"
+	"middleware/example/internal/models"
+
+	"github.com/gofrs/uuid"
 )
 
 func GetAllAgendas() ([]models.Agenda, error) {
-    db, err := helpers.OpenDB()
-    if err != nil {
-        return nil, err
-    }
-    defer helpers.CloseDB(db)
+	db, err := helpers.OpenDB()
+	if err != nil {
+		return nil, err
+	}
+	rows, err := db.Query("SELECT * FROM agendas")
+	helpers.CloseDB(db)
+	if err != nil {
+		return nil, err
+	}
 
-    rows, err := db.Query("SELECT id, name, ical_url FROM agendas")
-    if err != nil {
-        return nil, err
-    }
-    defer rows.Close()
+	agendas := []models.Agenda{}
+	for rows.Next() {
+		var data models.Agenda
+		err = rows.Scan(&data.Id, &data.Name, &data.IcalURL)
+		if err != nil {
+			return nil, err
+		}
+		agendas = append(agendas, data)
+	}
+	_ = rows.Close()
 
-    out := []models.Agenda{}
-    for rows.Next() {
-        var a models.Agenda
-        if err := rows.Scan(&a.ID, &a.Name, &a.IcalURL); err != nil {
-            return nil, err
-        }
-        out = append(out, a)
-    }
-    if err := rows.Err(); err != nil {
-        return nil, err
-    }
-    return out, nil
+	return agendas, err
 }
 
-func GetAgendaByID(id string) (*models.Agenda, error) {
-    db, err := helpers.OpenDB()
-    if err != nil {
-        return nil, err
-    }
-    defer helpers.CloseDB(db)
+func GetAgendaById(id uuid.UUID) (*models.Agenda, error) {
+	db, err := helpers.OpenDB()
+	if err != nil {
+		return nil, err
+	}
+	row := db.QueryRow("SELECT * FROM agendas WHERE id=?", id.String())
+	helpers.CloseDB(db)
 
-    row := db.QueryRow("SELECT id, name, ical_url FROM agendas WHERE id = ?", id)
-
-    var a models.Agenda
-    if err := row.Scan(&a.ID, &a.Name, &a.IcalURL); err != nil {
-        if err == sql.ErrNoRows {
-            return nil, err
-        }
-        return nil, err
-    }
-    return &a, nil
+	var agenda models.Agenda
+	err = row.Scan(&agenda.Id, &agenda.Name, &agenda.IcalURL)
+	if err != nil {
+		return nil, err
+	}
+	return &agenda, err
 }
 
-func CreateAgenda(a models.Agenda) error {
-    db, err := helpers.OpenDB()
-    if err != nil {
-        return err
-    }
-    defer helpers.CloseDB(db)
+func CreateAgenda(a *models.Agenda) (*uuid.UUID, error) {
+	db, err := helpers.OpenDB()
+	if err != nil {
+		return nil, err
+	}
+	defer helpers.CloseDB(db)
 
-    _, err = db.Exec("INSERT INTO agendas(id, name, ical_url) VALUES (?, ?, ?)", a.ID, a.Name, a.IcalURL)
-    return err
+	_, err = db.Exec("INSERT INTO agendas(id, name, ical_url) VALUES (?, ?, ?)",
+		a.Id, a.Name, a.IcalURL)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return a.Id, nil
 }
 
-func DeleteAgenda(id string) error {
-    db, err := helpers.OpenDB()
-    if err != nil {
-        return err
-    }
-    defer helpers.CloseDB(db)
+func UpdateAgenda(a *models.Agenda) error {
+	db, err := helpers.OpenDB()
+	if err != nil {
+		return err
+	}
+	defer helpers.CloseDB(db)
 
-    _, err = db.Exec("DELETE FROM agendas WHERE id = ?", id)
-    return err
+	_, err = db.Exec("UPDATE agendas SET name = ?, ical_url = ? WHERE id = ?",
+		a.Name, a.IcalURL, a.Id)
+
+	return err
+}
+
+func DeleteAgenda(id uuid.UUID) error {
+	db, err := helpers.OpenDB()
+	if err != nil {
+		return err
+	}
+	defer helpers.CloseDB(db)
+
+	_, err = db.Exec("DELETE FROM agendas WHERE id = ?", id)
+	return err
 }

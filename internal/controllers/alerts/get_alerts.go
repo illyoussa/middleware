@@ -1,26 +1,33 @@
 package alerts
 
 import (
-    "middleware/example/internal/models"
-    repo "middleware/example/internal/repositories/alerts"
+	"encoding/json"
+	"middleware/example/internal/helpers"
+	"middleware/example/internal/services/alerts"
+	"net/http"
 )
 
-func GetAllAlerts() ([]models.Alert, error) {
-    return repo.GetAllAlerts()
-}
+// GetAlerts
+// @Tags         alerts
+// @Summary      Get all alerts.
+// @Description  Get all alerts.
+// @Success      200            {array}  models.Alert
+// @Failure      500             "Something went wrong"
+// @Router       /alerts [get]
+func GetAlerts(w http.ResponseWriter, _ *http.Request) {
+	// calling service
+	alerts, err := alerts.GetAllAlerts()
+	if err != nil {
+		body, status := helpers.RespondError(err)
+		w.WriteHeader(status)
+		if body != nil {
+			_, _ = w.Write(body)
+		}
+		return
+	}
 
-func GetAlertByID(id int64) (*models.Alert, error) {
-    return repo.GetAlertByID(id)
-}
-
-func CreateAlert(a *models.Alert) (int64, error) {
-    return repo.CreateAlert(a)
-}
-
-func UpdateAlert(a models.Alert) error {
-    return repo.UpdateAlert(a)
-}
-
-func DeleteAlert(id int64) error {
-    return repo.DeleteAlert(id)
+	w.WriteHeader(http.StatusOK)
+	body, _ := json.Marshal(alerts)
+	_, _ = w.Write(body)
+	return
 }

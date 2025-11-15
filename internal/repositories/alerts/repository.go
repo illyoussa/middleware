@@ -1,91 +1,91 @@
 package alerts
 
 import (
-    "database/sql"
-    "middleware/example/internal/helpers"
-    "middleware/example/internal/models"
+	"middleware/example/internal/helpers"
+	"middleware/example/internal/models"
+
+	"github.com/gofrs/uuid"
 )
 
 func GetAllAlerts() ([]models.Alert, error) {
-    db, err := helpers.OpenDB()
-    if err != nil {
-        return nil, err
-    }
-    defer helpers.CloseDB(db)
+	db, err := helpers.OpenDB()
+	if err != nil {
+		return nil, err
+	}
+	rows, err := db.Query("SELECT * FROM alerts")
+	helpers.CloseDB(db)
+	if err != nil {
+		return nil, err
+	}
 
-    rows, err := db.Query("SELECT id, recipient, agenda_id, condition, method FROM alerts")
-    if err != nil {
-        return nil, err
-    }
-    defer rows.Close()
+	// parsing datas in object slice
+	alerts := []models.Alert{}
+	for rows.Next() {
+		var a models.Alert
+		err = rows.Scan(&a.Id, &a.Recipient, &a.AgendaID, &a.Condition, &a.Method)
+		if err != nil {
+			return nil, err
+		}
+		alerts = append(alerts, a)
+	}
 
-    out := []models.Alert{}
-    for rows.Next() {
-        var a models.Alert
-        if err := rows.Scan(&a.ID, &a.Recipient, &a.AgendaID, &a.Condition, &a.Method); err != nil {
-            return nil, err
-        }
-        out = append(out, a)
-    }
-    if err := rows.Err(); err != nil {
-        return nil, err
-    }
-    return out, nil
+	// don't forget to close rows
+	_ = rows.Close()
+
+	return alerts, err
 }
 
-func GetAlertByID(id int64) (*models.Alert, error) {
-    db, err := helpers.OpenDB()
-    if err != nil {
-        return nil, err
-    }
-    defer helpers.CloseDB(db)
+func GetAlertById(id uuid.UUID) (*models.Alert, error) {
+	db, err := helpers.OpenDB()
+	if err != nil {
+		return nil, err
+	}
 
-    row := db.QueryRow("SELECT id, recipient, agenda_id, condition, method FROM alerts WHERE id = ?", id)
+	row := db.QueryRow("SELECT id, recipient, agenda_id, condition, method FROM alerts WHERE id = ?", id)
+	helpers.CloseDB(db)
 
-    var a models.Alert
-    if err := row.Scan(&a.ID, &a.Recipient, &a.AgendaID, &a.Condition, &a.Method); err != nil {
-        if err == sql.ErrNoRows {
-            return nil, err
-        }
-        return nil, err
-    }
-    return &a, nil
+	var alert models.Alert
+	err = row.Scan(&alert.Id, &alert.Recipient, &alert.AgendaID, &alert.Condition, &alert.Method)
+	if err != nil {
+		return nil, err
+	}
+	return &alert, err
 }
 
-func CreateAlert(a *models.Alert) (int64, error) {
-    db, err := helpers.OpenDB()
-    if err != nil {
-        return 0, err
-    }
-    defer helpers.CloseDB(db)
+func CreateAlert(a *models.Alert) (*uuid.UUID, error) {
+	db, err := helpers.OpenDB()
+	if err != nil {
+		return nil, err
+	}
+	defer helpers.CloseDB(db)
 
-    res, err := db.Exec("INSERT INTO alerts(recipient, agenda_id, condition, method) VALUES (?, ?, ?, ?)",
-        a.Recipient, a.AgendaID, a.Condition, a.Method)
-    if err != nil {
-        return 0, err
-    }
-    return res.LastInsertId()
+	_, err = db.Exec("INSERT INTO alerts(recipient, agenda_id, condition, method) VALUES (?, ?, ?, ?)",
+		a.Recipient, a.AgendaID, a.Condition, a.Method)
+	if err != nil {
+		return nil, err
+	}
+	return a.Id, nil
 }
 
-func UpdateAlert(a models.Alert) error {
-    db, err := helpers.OpenDB()
-    if err != nil {
-        return err
-    }
-    defer helpers.CloseDB(db)
+func UpdateAlert(a *models.Alert) error {
+	db, err := helpers.OpenDB()
+	if err != nil {
+		return err
+	}
+	defer helpers.CloseDB(db)
 
-    _, err = db.Exec("UPDATE alerts SET recipient = ?, agenda_id = ?, condition = ?, method = ? WHERE id = ?",
-        a.Recipient, a.AgendaID, a.Condition, a.Method, a.ID)
-    return err
+	_, err = db.Exec("UPDATE alerts SET recipient = ?, agenda_id = ?, condition = ?, method = ? WHERE id = ?",
+		a.Recipient, a.AgendaID, a.Condition, a.Method, a.Id)
+	return err
 }
 
-func DeleteAlert(id int64) error {
-    db, err := helpers.OpenDB()
-    if err != nil {
-        return err
-    }
-    defer helpers.CloseDB(db)
+func DeleteAlert(id uuid.UUID) error {
+	db, err := helpers.OpenDB()
+	if err != nil {
+		return err
+	}
+	defer helpers.CloseDB(db)
 
-    _, err = db.Exec("DELETE FROM alerts WHERE id = ?", id)
-    return err
+	_, err = db.Exec("DELETE FROM alerts WHERE id = ?", id)
+	return err
 }

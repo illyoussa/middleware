@@ -1,4 +1,4 @@
-gipackage models
+package models
 
 import "fmt"
 

@@ -13,6 +13,8 @@ import (
 )
 
 func GetAllAlerts() ([]models.Alert, error) {
+	var err error
+	// calling repository
 	alerts, err := repository.GetAllAlerts()
 	if err != nil {
 		logrus.Errorf("error retrieving alerts : %s", err.Error())
@@ -24,7 +26,7 @@ func GetAllAlerts() ([]models.Alert, error) {
 }
 
 func GetAlertById(id uuid.UUID) (*models.Alert, error) {
-	alert, err := repository.GetAlertByID(id)
+	alert, err := repository.GetAlertById(id)
 	if err != nil {
 		if err.Error() == sql.ErrNoRows.Error() {
 			return nil, &models.ErrorNotFound{
@@ -36,37 +38,27 @@ func GetAlertById(id uuid.UUID) (*models.Alert, error) {
 			Message: fmt.Sprintf("Something went wrong while retrieving alert %s", id.String()),
 		}
 	}
-	return alert, nil
+	return alert, err
 }
 
-func CreateAlert(a *models.Alert) (uuid.UUID, error) {
+func CreateAlert(a *models.Alert) (*uuid.UUID, error) {
 	id, err := repository.CreateAlert(a)
+
 	if err != nil {
-		logrus.Errorf("error creating alert : %s", err.Error())
-		return uuid.Nil, &models.ErrorGeneric{
+		logrus.Errorf("error creating alert: %s", err.Error())
+		return nil, &models.ErrorGeneric{
 			Message: "Something went wrong while creating alert",
 		}
 	}
 	return id, nil
 }
 
-func UpdateAlert(a models.Alert) error {
+func UpdateAlert(a *models.Alert) error {
 	err := repository.UpdateAlert(a)
 	if err != nil {
-		logrus.Errorf("error updating alert %s : %s", a.ID.String(), err.Error())
+		logrus.Errorf("error updating alert %s : %s", a.Id.String(), err.Error())
 		return &models.ErrorGeneric{
-			Message: fmt.Sprintf("Something went wrong while updating alert %s", a.ID.String()),
-		}
-	}
-	return nil
-}
-
-func DeleteAlert(id uuid.UUID) error {
-	err := repository.DeleteAlert(id)
-	if err != nil {
-		logrus.Errorf("error deleting alert %s : %s", id.String(), err.Error())
-		return &models.ErrorGeneric{
-			Message: fmt.Sprintf("Something went wrong while deleting alert %s", id.String()),
+			Message: fmt.Sprintf("Something went wrong while updating alert %s", a.Id.String()),
 		}
 	}
 	return nil
