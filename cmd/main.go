@@ -1,36 +1,22 @@
 package main
 
 import (
-	"middleware/example/internal/controllers/agendas"
-	"middleware/example/internal/controllers/alerts"
+	"github.com/go-chi/chi/v5"
+	"github.com/sirupsen/logrus"
+	"middleware/example/internal/controllers/users"
 	"middleware/example/internal/helpers"
 	_ "middleware/example/internal/models"
 	"net/http"
-
-	"github.com/go-chi/chi/v5"
-	"github.com/sirupsen/logrus"
 )
 
 func main() {
 	r := chi.NewRouter()
 
-	r.Route("/agendas", func(r chi.Router) {
-		r.Get("/", agendas.GetAgendas)
-		r.Post("/", agendas.CreateAgenda)
-
-		r.Route("/{id}", func(r chi.Router) {
-			r.Use(agendas.Context)
-			r.Get("/", agendas.GetAgenda)
-			r.Put("/", agendas.UpdateAgenda)
-			r.Delete("/", agendas.DeleteAgenda)
-		})
-	})
-
-	r.Route("/alerts", func(r chi.Router) {
-		r.Get("/", alerts.GetAlerts)
-		r.Route("/{id}", func(r chi.Router) {
-			r.Use(alerts.Context)
-			r.Get("/", alerts.GetAlert)
+	r.Route("/users", func(r chi.Router) { // route /users
+		r.Get("/", users.GetUsers)            // GET /users
+		r.Route("/{id}", func(r chi.Router) { // route /users/{id}
+			r.Use(users.Context)      // Use Context method to get user ID
+			r.Get("/", users.GetUser) // GET /users/{id}
 		})
 	})
 
@@ -43,92 +29,16 @@ func init() {
 	if err != nil {
 		logrus.Fatalf("error while opening database : %s", err.Error())
 	}
-
-	db.Exec("DROP TABLE IF EXISTS events;")
-	db.Exec("DROP TABLE IF EXISTS alerts;")
-	db.Exec("DROP TABLE IF EXISTS agendas;")
-
 	schemes := []string{
-		`-- Agendas : identifiants UCA pour récupération iCal
-        CREATE TABLE IF NOT EXISTS agendas (
-            id VARCHAR(255) PRIMARY KEY NOT NULL,
-            name TEXT,
-            ical_url TEXT
-        );`,
-
-		`-- Alerts : règles de notification liées à un agenda
-        CREATE TABLE IF NOT EXISTS alerts (
-            id VARCHAR(255) PRIMARY KEY NOT NULL,
-            recipient TEXT NOT NULL,
-            agenda_id VARCHAR(255) NOT NULL,
-            condition TEXT DEFAULT 'always',
-            method TEXT DEFAULT 'email'
-        );`,
-
-		`-- Events : stockage simplifié des VEVENTs extraits d'un fichier iCal
-        CREATE TABLE IF NOT EXISTS events (
-            uid TEXT PRIMARY KEY NOT NULL,
-            dtstamp TEXT,
-            dtstart TEXT,
-            dtend TEXT,
-            summary TEXT,
-            location TEXT,
-            description TEXT,
-            created TEXT,
-            last_modified TEXT,
-            sequence INTEGER,
-            agenda_id VARCHAR(255)
-        );`,
+		`CREATE TABLE IF NOT EXISTS users (
+			id VARCHAR(255) PRIMARY KEY NOT NULL UNIQUE,
+			name VARCHAR(255) NOT NULL
+		);`,
 	}
-
 	for _, scheme := range schemes {
 		if _, err := db.Exec(scheme); err != nil {
 			logrus.Fatalln("Could not generate table ! Error was : " + err.Error())
 		}
 	}
-
-	logrus.Info("[INFO] Seeding database with test data...")
-
-	agendaTestId1 := "11111111-1111-1111-1111-111111110001"
-	agendaTestId2 := "11111111-1111-1111-1111-111111110002"
-
-	alertTestId1 := "22222222-2222-2222-2222-222222220001"
-	alertTestId2 := "22222222-2222-2222-2222-222222220002"
-
-	// Nettoyage
-	if _, err := db.Exec("DELETE FROM events"); err != nil {
-		logrus.Fatalln("Could not clear events table ! Error was : " + err.Error())
-	}
-	if _, err := db.Exec("DELETE FROM alerts"); err != nil {
-		logrus.Fatalln("Could not clear alerts table ! Error was : " + err.Error())
-	}
-	if _, err := db.Exec("DELETE FROM agendas"); err != nil {
-		logrus.Fatalln("Could not clear agendas table ! Error was : " + err.Error())
-	}
-
-	seedQueries := []string{
-		// Agendas
-		`INSERT INTO agendas (id, name, ical_url) VALUES
-            ('` + agendaTestId1 + `', 'Emploi du temps - L3 Info', 'https://example.com/ical/l3_info.ics'),
-            ('` + agendaTestId2 + `', 'Agenda Personnel', 'https://example.com/ical/perso.ics');`,
-
-		// Alerts
-		`INSERT INTO alerts (id, recipient, agenda_id, condition, method) VALUES
-            ('` + alertTestId1 + `', 'test@example.com', '` + agendaTestId1 + `', 'on_change', 'email'),
-            ('` + alertTestId2 + `', 'admin@example.com', '` + agendaTestId1 + `', 'always', 'email');`,
-
-		// Events
-		`INSERT INTO events (uid, dtstart, dtend, summary, location, agenda_id) VALUES
-            ('evt1', '2025-11-20T08:00:00Z', '2025-11-20T10:00:00Z', 'Cours de Go', 'Amphi 1', '` + agendaTestId1 + `'),
-            ('evt2', '2025-11-21T14:00:00Z', '2025-11-21T15:00:00Z', 'Réunion Projet', 'Salle B204', '` + agendaTestId1 + `'),
-            ('evt3', '2025-11-22T12:30:00Z', '2025-11-22T13:30:00Z', 'Rdv Dentiste', '12 rue du Test', '` + agendaTestId2 + `');`,
-	}
-
-	for _, query := range seedQueries {
-		if _, err := db.Exec(query); err != nil {
-			logrus.Fatalln("Could not seed data ! Error was : " + err.Error())
-		}
-	}
-
 	helpers.CloseDB(db)
 }
