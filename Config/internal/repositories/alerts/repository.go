@@ -59,11 +59,24 @@ func CreateAlert(a *models.Alert) (*uuid.UUID, error) {
 	}
 	defer helpers.CloseDB(db)
 
-	_, err = db.Exec("INSERT INTO alerts(recipient, agenda_id, condition, method) VALUES (?, ?, ?, ?)",
-		a.Recipient, a.AgendaID, a.Condition, a.Method)
+	// Vérifier ou générer l'ID
+	if a.Id == nil {
+		newId, err := uuid.NewV4()
+		if err != nil {
+			return nil, err
+		}
+		a.Id = &newId
+	}
+
+	// Insérer l'alerte en incluant l'ID
+	_, err = db.Exec(
+		"INSERT INTO alerts(id, recipient, agenda_id, condition, method) VALUES (?, ?, ?, ?, ?)",
+		a.Id.String(), a.Recipient, a.AgendaID, a.Condition, a.Method,
+	)
 	if err != nil {
 		return nil, err
 	}
+
 	return a.Id, nil
 }
 
