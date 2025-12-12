@@ -26,3 +26,11 @@ type ErrorGeneric struct {
 func (e ErrorGeneric) Error() string {
 	return e.Message
 }
+
+type ErrorConflict struct {
+	Message string `default:""`
+}
+
+func (e ErrorConflict) Error() string {
+	return fmt.Sprintf("Conflict - %s", e.Message)
+}

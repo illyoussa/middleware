@@ -79,9 +79,11 @@ func init() {
 
 	agendaTestId1 := "11111111-1111-1111-1111-111111110001"
 	agendaTestId2 := "11111111-1111-1111-1111-111111110002"
+	agendaTestId3 := "11111111-1111-1111-1111-111111110003"
 
 	alertTestId1 := "22222222-2222-2222-2222-222222220001"
 	alertTestId2 := "22222222-2222-2222-2222-222222220002"
+	alertTestId3 := "22222222-2222-2222-2222-222222220003"
 
 	// Nettoyage
 	if _, err := db.Exec("DELETE FROM alerts"); err != nil {
@@ -95,12 +97,14 @@ func init() {
 		// Agendas
 		`INSERT INTO agendas (id, name, ical_url) VALUES
             ('` + agendaTestId1 + `', 'Emploi du temps - L3 Info', 'https://example.com/ical/l3_info.ics'),
-            ('` + agendaTestId2 + `', 'Agenda Personnel', 'https://example.com/ical/perso.ics');`,
+            ('` + agendaTestId2 + `', 'Agenda Personnel', 'https://example.com/ical/perso.ics'),
+			('` + agendaTestId3 + `', 'Agenda Vacances', 'https://example.com/ical/vacances.ics');`,
 
 		// Alerts
 		`INSERT INTO alerts (id, recipient, agenda_id, condition, method) VALUES
             ('` + alertTestId1 + `', 'test@example.com', '` + agendaTestId1 + `', 'on_change', 'email'),
-            ('` + alertTestId2 + `', 'admin@example.com', '` + agendaTestId1 + `', 'always', 'email');`,
+            ('` + alertTestId2 + `', 'admin@example.com', '` + agendaTestId1 + `', 'always', 'email'),
+			('` + alertTestId3 + `', 'employe@example.com, '` + agendaTestId2 + `', 'on_change', 'sms');`,
 	}
 
 	for _, query := range seedQueries {
