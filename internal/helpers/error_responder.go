@@ -2,33 +2,34 @@ package helpers
 
 import (
 	"encoding/json"
-	"net/http"
-
-	"middleware/internal/models"
-
 	"github.com/sirupsen/logrus"
+	"middleware/example/internal/models"
+	"net/http"
 )
 
-// RespondError transforme une erreur métier en réponse HTTP (status + body JSON)
+// RespondError
+// This function is for handling different error types
 func RespondError(err error) (body []byte, status int) {
-	// Par défaut : erreur interne
 	status = http.StatusInternalServerError
 
-	switch err.(type) {
-	case *models.ErrorNotFound:
+	if _, isErr := err.(*models.ErrorNotFound); isErr {
 		status = http.StatusNotFound
-	case *models.ErrorUnprocessableEntity:
+	}
+
+	if _, isErr := err.(*models.ErrorUnprocessableEntity); isErr {
 		status = http.StatusUnprocessableEntity
 	}
 
-	// On ne renvoie le body que si ce n'est PAS une 500
-	// (bonne pratique : ne pas leak les erreurs internes)
+	// insert other if statement here for other error types
+
+	// if error is not generic, we can send message
+	// because it's not a good practice to send reason for an "internal server error" to the client
 	if status != http.StatusInternalServerError {
 		body, _ = json.Marshal(err)
 	}
 
-	// Log serveur (visible seulement côté backend)
-	logrus.WithError(err).Warnf("HTTP error %d", status)
+	// logging error
+	logrus.WithError(err).Printf("An error occured with http code %d", status)
 
 	return
 }
