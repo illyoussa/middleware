@@ -1,28 +1,28 @@
 package models
 
-import "fmt"
-
-type ErrorUnprocessableEntity struct {
-	Message string `default:""`
+// ErrorNotFound représente une erreur métier "ressource inexistante"
+type ErrorNotFound struct {
+	Message string `json:"message"`
 }
 
-func (e ErrorUnprocessableEntity) Error() string {
-	//return fmt.Sprintf("Unprocessable entity - %s", e.Message)
+func (e *ErrorNotFound) Error() string {
 	return e.Message
 }
 
-type ErrorNotFound struct {
-	Message string `default:""`
+// ErrorUnprocessableEntity représente une erreur métier "données invalides"
+type ErrorUnprocessableEntity struct {
+	Message string `json:"message"`
 }
 
-func (e ErrorNotFound) Error() string {
-	return fmt.Sprintf("Not found - %s", e.Message)
+func (e *ErrorUnprocessableEntity) Error() string {
+	return e.Message
 }
 
-type ErrorGeneric struct {
-	Message string `default:""`
+// (OPTIONNEL) ErrorConflict pour les cas de doublons / conflits métier
+type ErrorConflict struct {
+	Message string `json:"message"`
 }
 
-func (e ErrorGeneric) Error() string {
+func (e *ErrorConflict) Error() string {
 	return e.Message
 }

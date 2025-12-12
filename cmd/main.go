@@ -1,44 +1,55 @@
 package main
 
 import (
-	"github.com/go-chi/chi/v5"
-	"github.com/sirupsen/logrus"
-	"middleware/example/internal/controllers/users"
-	"middleware/example/internal/helpers"
-	_ "middleware/example/internal/models"
+	"log"
 	"net/http"
+	"os"
+
+	"github.com/sirupsen/logrus"
+
+	"middleware/internal/controllers"
+	"middleware/internal/helpers"
+	"middleware/internal/repositories"
+	"middleware/internal/router"
+	"middleware/internal/services"
 )
 
 func main() {
-	r := chi.NewRouter()
+	// --- Logger ---
+	logrus.SetFormatter(&logrus.TextFormatter{FullTimestamp: true})
 
-	r.Route("/users", func(r chi.Router) { // route /users
-		r.Get("/", users.GetUsers)            // GET /users
-		r.Route("/{id}", func(r chi.Router) { // route /users/{id}
-			r.Use(users.Context)      // Use Context method to get user ID
-			r.Get("/", users.GetUser) // GET /users/{id}
-		})
-	})
-
-	logrus.Info("[INFO] Web server started. Now listening on *:8080")
-	logrus.Fatalln(http.ListenAndServe(":8080", r))
-}
-
-func init() {
+	// --- DB ---
 	db, err := helpers.OpenDB()
 	if err != nil {
-		logrus.Fatalf("error while opening database : %s", err.Error())
+		logrus.Fatalf("failed to open db: %s", err.Error())
 	}
-	schemes := []string{
-		`CREATE TABLE IF NOT EXISTS users (
-			id VARCHAR(255) PRIMARY KEY NOT NULL UNIQUE,
-			name VARCHAR(255) NOT NULL
-		);`,
+	defer helpers.CloseDB(db)
+
+	// --- Wiring (repo -> service -> controller) ---
+	repo := repositories.NewEventRepository(db)
+	svc := services.NewEventService(repo)
+	ctrl := controllers.NewEventController(svc)
+
+	// --- Init schema (create tables) ---
+	if err := svc.InitSchema(); err != nil {
+		logrus.Fatalf("failed to init schema: %s", err.Error())
 	}
-	for _, scheme := range schemes {
-		if _, err := db.Exec(scheme); err != nil {
-			logrus.Fatalln("Could not generate table ! Error was : " + err.Error())
-		}
+
+	// --- Router ---
+	mux := http.NewServeMux()
+	router.RegisterRoutes(mux, ctrl)
+
+	// --- Server ---
+	port := os.Getenv("TIMETABLE_PORT")
+	if port == "" {
+		port = "8081"
 	}
-	helpers.CloseDB(db)
+	addr := ":" + port
+
+	log.Printf("Timetable API listening on http://localhost%s", addr)
+
+	// Important: on wrap avec mux (sinon rien ne marche)
+	if err := http.ListenAndServe(addr, mux); err != nil {
+		logrus.Fatalf("server error: %s", err.Error())
+	}
 }

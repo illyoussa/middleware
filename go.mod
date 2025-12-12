@@ -1,10 +1,8 @@
-module middleware/example
+module middleware
 
 go 1.23
 
 require (
-	github.com/go-chi/chi/v5 v5.0.10
-	github.com/gofrs/uuid v4.4.0+incompatible
 	github.com/mattn/go-sqlite3 v1.14.18
 	github.com/sirupsen/logrus v1.9.3
 	github.com/swaggo/swag v1.16.2
