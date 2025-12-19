@@ -48,6 +48,7 @@ func GetEventByUID(agendaId string, uid string) (*models.Event, error) {
 
 // CreateEvent crée un nouvel event
 func CreateEvent(e *models.Event) error {
+	// TODO uuid, _ = uuid.NewUUID()
 	err := repository.CreateEvent(e)
 	if err != nil {
 		logrus.Errorf(

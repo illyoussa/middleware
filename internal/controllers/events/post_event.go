@@ -2,6 +2,7 @@ package events
 
 import (
 	"encoding/json"
+	"fmt"
 	"io"
 	"middleware/example/internal/helpers"
 	"middleware/example/internal/models"
@@ -35,8 +36,10 @@ func CreateEvent(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	agendaId, _ := r.Context().Value("agendaId").(string)
-	eventToCreate.AgendaID = agendaId
+	fmt.Println(eventToCreate.AgendaID)
+
+	//agendaId, _ := r.Context().Value("agendaId").(string)
+	//eventToCreate.AgendaID = agendaId
 
 	if err := services.CreateEvent(&eventToCreate); err != nil {
 		resp, status := helpers.RespondError(err)
