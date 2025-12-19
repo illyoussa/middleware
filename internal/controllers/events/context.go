@@ -8,21 +8,15 @@ import (
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
-	"github.com/gofrs/uuid"
 )
 
-// Context
-/* This method is used to get ressource ID from url
-*
-* In REST, urls are formed like this : events/{specific_collection_ressource_id}/another_collection/{another_collection_ressource_id}...
- */
 func Context(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		eventId, err := uuid.FromString(chi.URLParam(r, "id"))
-		if err != nil {
+		uid := chi.URLParam(r, "id")
+		if uid == "" {
 			body, status := helpers.RespondError(&models.ErrorUnprocessableEntity{
-				Message: fmt.Sprintf("cannot parse id (%s) as UUID", chi.URLParam(r, "id"))})
-
+				Message: fmt.Sprintf("missing id (uid) in path"),
+			})
 			w.WriteHeader(status)
 			if body != nil {
 				_, _ = w.Write(body)
@@ -30,7 +24,7 @@ func Context(next http.Handler) http.Handler {
 			return
 		}
 
-		ctx := context.WithValue(r.Context(), "eventId", eventId) // We fill context with a Key-valued variable
+		ctx := context.WithValue(r.Context(), "uid", uid)
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})
 }

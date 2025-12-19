@@ -3,26 +3,36 @@ package events
 import (
 	"encoding/json"
 	"middleware/example/internal/helpers"
-	"middleware/example/internal/services/events"
+	"middleware/example/internal/models"
+	services "middleware/example/internal/services/events"
 	"net/http"
-
-	"github.com/gofrs/uuid"
 )
 
 // GetEvent
-// @Tags         events
-// @Summary      Get a event.
-// @Description  Get a event.
-// @Param        id           	path      string  true  "Event UUID formatted ID"
-// @Success      200            {object}  models.Event
-// @Failure      422            "Cannot parse id"
-// @Failure      500            "Something went wrong"
-// @Router       /events/{id} [get]
 func GetEvent(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
-	eventId, _ := ctx.Value("eventId").(uuid.UUID) // getting key set in context.go
 
-	event, err := events.GetEventById(eventId)
+	uid, ok := ctx.Value("uid").(string)
+	if !ok || uid == "" {
+		body, status := helpers.RespondError(&models.ErrorUnprocessableEntity{Message: "Invalid event UID in context"})
+		w.WriteHeader(status)
+		if body != nil {
+			_, _ = w.Write(body)
+		}
+		return
+	}
+
+	agendaId := r.URL.Query().Get("agendaId")
+	if agendaId == "" {
+		body, status := helpers.RespondError(&models.ErrorUnprocessableEntity{Message: "Missing agendaId query parameter"})
+		w.WriteHeader(status)
+		if body != nil {
+			_, _ = w.Write(body)
+		}
+		return
+	}
+
+	event, err := services.GetEventByUID(agendaId, uid)
 	if err != nil {
 		body, status := helpers.RespondError(err)
 		w.WriteHeader(status)
@@ -32,8 +42,7 @@ func GetEvent(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	body, _ := json.Marshal(event)
-	_, _ = w.Write(body)
-	return
+	_ = json.NewEncoder(w).Encode(event)
 }

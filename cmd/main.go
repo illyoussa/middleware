@@ -25,7 +25,6 @@ func main() {
 		})
 	})
 
-
 	logrus.Info("[INFO] Web server started. Now listening on *:8080")
 	logrus.Fatalln(http.ListenAndServe(":8080", r))
 }
@@ -36,23 +35,27 @@ func init() {
 		logrus.Fatalf("error while opening database : %s", err.Error())
 	}
 
-	db.Exec("DROP TABLE IF EXISTS events;")
+	// Drop + recreate
+	if _, err := db.Exec("DROP TABLE IF EXISTS events;"); err != nil {
+		logrus.Fatalln("Could not drop table ! Error was : " + err.Error())
+	}
 
 	schemes := []string{
 		`-- Events : stockage simplifié des VEVENTs extraits d'un fichier iCal
-        CREATE TABLE IF NOT EXISTS events (
-            uid TEXT PRIMARY KEY NOT NULL,
-            dtstamp TEXT,
-            dtstart TEXT,
-            dtend TEXT,
-            summary TEXT,
-            location TEXT,
-            description TEXT,
-            created TEXT,
-            last_modified TEXT,
-            sequence INTEGER,
-            agenda_id VARCHAR(255)
-        );`,
+		CREATE TABLE IF NOT EXISTS events (
+			uid TEXT NOT NULL,
+			dtstamp TEXT NOT NULL DEFAULT '1111',
+			dtstart TEXT NOT NULL DEFAULT '1111',
+			dtend TEXT NOT NULL DEFAULT '1111',
+			summary TEXT NOT NULL DEFAULT '1111',
+			location TEXT NOT NULL DEFAULT '1111',
+			description TEXT NOT NULL DEFAULT '1111',
+			created TEXT NOT NULL DEFAULT '1111',
+			last_modified TEXT NOT NULL DEFAULT '1111',
+			sequence INTEGER NOT NULL DEFAULT 0,
+			agenda_id VARCHAR(255) NOT NULL,
+			PRIMARY KEY (agenda_id, uid)
+		);`,
 	}
 
 	for _, scheme := range schemes {
@@ -71,13 +74,14 @@ func init() {
 		logrus.Fatalln("Could not clear events table ! Error was : " + err.Error())
 	}
 
+	// On remplit TOUTES les colonnes pour éviter les NULL et rester cohérent avec ton model Go (string/int64)
 	seedQueries := []string{
-
-		// Events
-		`INSERT INTO events (uid, dtstart, dtend, summary, location, agenda_id) VALUES
-            ('evt1', '2025-11-20T08:00:00Z', '2025-11-20T10:00:00Z', 'Cours de Go', 'Amphi 1', '` + agendaTestId1 + `'),
-            ('evt2', '2025-11-21T14:00:00Z', '2025-11-21T15:00:00Z', 'Réunion Projet', 'Salle B204', '` + agendaTestId1 + `'),
-            ('evt3', '2025-11-22T12:30:00Z', '2025-11-22T13:30:00Z', 'Rdv Dentiste', '12 rue du Test', '` + agendaTestId2 + `');`,
+		`INSERT INTO events (
+			uid, dtstamp, dtstart, dtend, summary, location, description, created, last_modified, sequence, agenda_id
+		) VALUES
+			('evt1', '1111', '2025-11-20T08:00:00Z', '2025-11-20T10:00:00Z', 'Cours de Go', 'Amphi 1', '1111', '1111', '1111', 0, '` + agendaTestId1 + `'),
+			('evt2', '1111', '2025-11-21T14:00:00Z', '2025-11-21T15:00:00Z', 'Réunion Projet', 'Salle B204', '1111', '1111', '1111', 0, '` + agendaTestId1 + `'),
+			('evt3', '1111', '2025-11-22T12:30:00Z', '2025-11-22T13:30:00Z', 'Rdv Dentiste', '12 rue du Test', '1111', '1111', '1111', 0, '` + agendaTestId2 + `');`,
 	}
 
 	for _, query := range seedQueries {

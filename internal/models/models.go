@@ -1,12 +1,7 @@
 package models
 
-import (
-	"github.com/gofrs/uuid"
-)
-
-// Event représente un VEVENT extrait d'un fichier iCal.
 type Event struct {
-	UID          *uuid.UUID `json:"uid"`
+	UID          string `json:"uid"`
 	DTStamp      string `json:"dtstamp"`
 	DTStart      string `json:"dtstart"`
 	DTEnd        string `json:"dtend"`

@@ -3,20 +3,15 @@ package events
 import (
 	"encoding/json"
 	"middleware/example/internal/helpers"
-	"middleware/example/internal/services/events"
+	services "middleware/example/internal/services/events"
 	"net/http"
 )
 
 // GetEvents
-// @Tags         events
-// @Summary      Get all events.
-// @Description  Get all events.
-// @Success      200            {array}  models.Event
-// @Failure      500             "Something went wrong"
-// @Router       /events [get]
-func GetEvents(w http.ResponseWriter, _ *http.Request) {
-	// calling service
-	events, err := events.GetAllEvents()
+func GetEvents(w http.ResponseWriter, r *http.Request) {
+	agendaId, _ := r.Context().Value("agendaId").(string)
+
+	events, err := services.GetAllEvents(agendaId)
 	if err != nil {
 		body, status := helpers.RespondError(err)
 		w.WriteHeader(status)
@@ -27,7 +22,5 @@ func GetEvents(w http.ResponseWriter, _ *http.Request) {
 	}
 
 	w.WriteHeader(http.StatusOK)
-	body, _ := json.Marshal(events)
-	_, _ = w.Write(body)
-	return
+	_ = json.NewEncoder(w).Encode(events)
 }

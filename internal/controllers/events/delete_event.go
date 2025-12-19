@@ -2,10 +2,8 @@ package events
 
 import (
 	"middleware/example/internal/helpers"
-	"middleware/example/internal/services/events" // Assurez-vous d'importer votre service
+	services "middleware/example/internal/services/events"
 	"net/http"
-
-	"github.com/gofrs/uuid"
 )
 
 // DeleteEvent
@@ -17,11 +15,14 @@ import (
 // @Failure      404            "Event not found"
 // @Failure      500            "Something went wrong"
 // @Router       /events/{id} [delete]
+
 func DeleteEvent(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
-	eventId, _ := ctx.Value("eventId").(uuid.UUID)
 
-	err := events.DeleteEvent(eventId)
+	agendaId, _ := ctx.Value("agendaId").(string)
+	uid, _ := ctx.Value("uid").(string)
+
+	err := services.DeleteEvent(agendaId, uid)
 	if err != nil {
 		body, status := helpers.RespondError(err)
 		w.WriteHeader(status)
@@ -30,7 +31,5 @@ func DeleteEvent(w http.ResponseWriter, r *http.Request) {
 		}
 		return
 	}
-
 	w.WriteHeader(http.StatusNoContent)
-
 }
