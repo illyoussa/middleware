@@ -35,8 +35,8 @@ func CreateEvent(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	agendaId, _ := r.Context().Value("agendaId").(string)
-	eventToCreate.AgendaID = agendaId
+	//agendaId, _ := r.Context().Value("agendaId").(string)
+	//eventToCreate.AgendaID = agendaId
 
 	if err := services.CreateEvent(&eventToCreate); err != nil {
 		resp, status := helpers.RespondError(err)
