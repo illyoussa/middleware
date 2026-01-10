@@ -3,7 +3,7 @@ package agendas
 import (
 	"encoding/json"
 	"middleware/example/internal/helpers"
-	"middleware/example/internal/services/agendas"
+	"middleware/example/internal/repositories/agendas"
 	"net/http"
 )
 
@@ -15,7 +15,6 @@ import (
 // @Failure      500             "Something went wrong"
 // @Router       /agendas [get]
 func GetAgendas(w http.ResponseWriter, _ *http.Request) {
-	// calling service
 	agendas, err := agendas.GetAllAgendas()
 	if err != nil {
 		body, status := helpers.RespondError(err)

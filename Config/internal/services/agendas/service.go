@@ -12,9 +12,7 @@ import (
 
 func GetAllAgendas() ([]models.Agenda, error) {
 	var err error
-	// calling repository
 	agendas, err := repository.GetAllAgendas()
-	// managing errors
 	if err != nil {
 		logrus.Errorf("error retrieving agendas : %s", err.Error())
 		return nil, &models.ErrorGeneric{

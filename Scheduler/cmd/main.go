@@ -1,66 +1,53 @@
 package main
 
 import (
+	"context"
 	"fmt"
-	"io"
-	"net/http"
-	"strings"
+	"log"
+	"middleware/Scheduler/internal/events"
+	"os"
+	"os/signal"
 	"time"
+
+	"github.com/zhashkevych/scheduler"
 )
 
-func main() {
+func mainLogic() {
+	url := "https://edt.uca.fr/jsp/custom/modules/plannings/anonymous_cal.jsp?resources=13295,13345&projectId=3&calType=ical&nbWeeks=8&displayConfigId=128"
 
-	rawDate := "20251228T152000Z"
-
-	// 2006 = année ; 01 = mois ; 02 = jour ; 15 = heure ; 04 = minute ; 05 = seconde
-	d, _ := time.Parse("20060102T150405Z", rawDate)
-
-	if d.Before(time.Now()) {
-		fmt.Println("Avant !")
-	} else {
-		fmt.Println("Après !")
-	}
-
-	fmt.Println(d)
-
-	resp, err := http.Get("https://edt.uca.fr/jsp/custom/modules/plannings/anonymous_cal.jsp?resources=46030&projectId=3&calType=ical&nbWeeks=8&displayConfigId=128")
+	icalData, err := events.FetchICalData(url)
 	if err != nil {
-		fmt.Println(err)
+		log.Printf("Erreur lors de la récupération des données iCal : %s", err)
 		return
 	}
 
-	defer resp.Body.Close()
-
-	body, _ := io.ReadAll(resp.Body)
-
-	lines := strings.Split(string(body), "\n")
-
-	currentlyParsing := false
-	tmpObj := map[string]interface{}{}
-
-	for _, line := range lines {
-		if strings.HasPrefix(line, "BEGIN:VEVENT") {
-			currentlyParsing = true
-		} else {
-			if currentlyParsing {
-				if strings.HasPrefix(line, "END:VEVENT") {
-					fmt.Println(tmpObj)
-					tmpObj = map[string]interface{}{}
-					currentlyParsing = false
-				} else {
-					if strings.HasPrefix(line, "SUMMARY:") {
-						// Attention, le dernier caractère est un "carriage return" (\r). On le supprime sinon ça fait échouer toute notre logique.
-						tmpObj["summary"] = strings.Replace(strings.Replace(line, "SUMMARY:", "", 1), "\r", "", 1)
-					}
-					if strings.HasPrefix(line, "DTSTART:") {
-						tmpObj["start"], _ = time.Parse("20060102T150405Z", strings.Replace(strings.Replace(line, "DTSTART:", "", 1), "\r", "", 1))
-					}
-				}
-			} else {
-				continue
-			}
-		}
-
+	parsedEvents, err := events.ParseIcalToJSON(icalData)
+	if err != nil {
+		log.Printf("Erreur lors du parsing des données iCal : %s", err)
+		return
 	}
 
+	err = events.PublishEvents(parsedEvents, "EVENTS.schedule")
+	if err != nil {
+		log.Printf("Erreur lors de la publication des événements : %s", err)
+		return
+	}
+
+	for _, event := range parsedEvents {
+		fmt.Printf("Événement publié : %s\n", event.Summary)
+	}
+}
+
+func main() {
+	ctx := context.Background()
+	sc := scheduler.NewScheduler()
+
+	sc.Add(ctx, func(ctx context.Context) {
+		mainLogic()
+	}, time.Minute*10)
+
+	quit := make(chan os.Signal, 1)
+	signal.Notify(quit, os.Interrupt)
+	<-quit
+	sc.Stop()
 }
