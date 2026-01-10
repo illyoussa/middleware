@@ -8,10 +8,15 @@ import (
 )
 
 // GetEvents
+// @Tags         events
+// @Summary      Get all events
+// @Description  Retrieve the list of all existing events
+// @Produce      json
+// @Success      200      {array}  models.Event
+// @Failure      500      "Something went wrong"
+// @Router       /events [get]
 func GetEvents(w http.ResponseWriter, r *http.Request) {
-	agendaId, _ := r.Context().Value("agendaId").(string)
-
-	events, err := services.GetAllEvents(agendaId)
+	events, err := services.GetAllEvents()
 	if err != nil {
 		body, status := helpers.RespondError(err)
 		w.WriteHeader(status)
@@ -22,5 +27,7 @@ func GetEvents(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.WriteHeader(http.StatusOK)
-	_ = json.NewEncoder(w).Encode(events)
+	body, _ := json.Marshal(events)
+	_, _ = w.Write(body)
+	return
 }

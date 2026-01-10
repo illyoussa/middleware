@@ -1,17 +1,16 @@
 package events
 
 import (
-	"database/sql"
 	"fmt"
-
 	"middleware/example/internal/models"
 	repository "middleware/example/internal/repositories/events"
 
 	"github.com/sirupsen/logrus"
 )
 
-func GetAllEvents(agendaId string) ([]models.Event, error) {
-	events, err := repository.GetAllEvents(agendaId)
+func GetAllEvents() ([]models.Event, error) {
+	var err error
+	events, err := repository.GetAllEvents()
 	if err != nil {
 		logrus.Errorf("error retrieving events : %s", err.Error())
 		return nil, &models.ErrorGeneric{
@@ -22,22 +21,17 @@ func GetAllEvents(agendaId string) ([]models.Event, error) {
 	return events, nil
 }
 
-func GetEventByUID(agendaId string, uid string) (*models.Event, error) {
-	event, err := repository.GetEventByUID(agendaId, uid)
+func GetEventById(id string) (*models.Event, error) {
+	event, err := repository.GetEventById(id)
 	if err != nil {
-		if err == sql.ErrNoRows {
+		if err.Error() == "sql: no rows in result set" {
 			return nil, &models.ErrorNotFound{
 				Message: "event not found",
 			}
 		}
-		logrus.Errorf(
-			"error retrieving event uid=%s agendaId=%s : %s",
-			uid,
-			agendaId,
-			err.Error(),
-		)
+		logrus.Errorf("error retrieving event %s : %s", id, err.Error())
 		return nil, &models.ErrorGeneric{
-			Message: "Something went wrong while retrieving event",
+			Message: "Something went wrong while retrieving event " + id,
 		}
 	}
 
@@ -45,14 +39,9 @@ func GetEventByUID(agendaId string, uid string) (*models.Event, error) {
 }
 
 func CreateEvent(e *models.Event) error {
-	err := repository.CreateEvent(e)
+	_, err := repository.CreateEvent(e)
 	if err != nil {
-		logrus.Errorf(
-			"error creating event uid=%s agendaId=%s : %s",
-			e.UID,
-			e.AgendaID,
-			err.Error(),
-		)
+		logrus.Errorf("error creating event id=%s : %s", e.Id, err.Error())
 		return &models.ErrorGeneric{
 			Message: "Something went wrong while creating event",
 		}
@@ -64,8 +53,8 @@ func UpdateEvent(e *models.Event) error {
 	err := repository.UpdateEvent(e)
 	if err != nil {
 		logrus.Errorf(
-			"error updating event uid=%s agendaId=%s : %s",
-			e.UID,
+			"error updating event id=%s agendaId=%s : %s",
+			e.Id,
 			e.AgendaID,
 			err.Error(),
 		)
@@ -76,21 +65,16 @@ func UpdateEvent(e *models.Event) error {
 	return nil
 }
 
-func DeleteEvent(agendaId string, uid string) error {
-	err := repository.DeleteEvent(agendaId, uid)
+func DeleteEvent(id string) error {
+	err := repository.DeleteEvent(id)
 	if err != nil {
 		logrus.Errorf(
-			"error deleting event uid=%s agendaId=%s : %s",
-			uid,
-			agendaId,
+			"error deleting event id=%s : %s",
+			id,
 			err.Error(),
 		)
 		return &models.ErrorGeneric{
-			Message: fmt.Sprintf(
-				"Something went wrong while deleting event uid=%s agendaId=%s",
-				uid,
-				agendaId,
-			),
+			Message: fmt.Sprintf("Something went wrong while deleting event id=%s", id),
 		}
 	}
 	return nil

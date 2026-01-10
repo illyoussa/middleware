@@ -1,7 +1,12 @@
 package models
 
+// Event structure
 type Event struct {
-	UID          string `json:"uid"`
+	ResourceIds []int `json:"resourceIds"`
+
+	Id string `json:"id"`
+
+	AgendaID     string `json:"agendaId"`
 	DTStamp      string `json:"dtstamp"`
 	DTStart      string `json:"dtstart"`
 	DTEnd        string `json:"dtend"`
@@ -11,5 +16,4 @@ type Event struct {
 	Created      string `json:"created"`
 	LastModified string `json:"lastModified"`
 	Sequence     int64  `json:"sequence"`
-	AgendaID     string `json:"agendaId"`
 }

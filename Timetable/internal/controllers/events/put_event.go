@@ -2,36 +2,36 @@ package events
 
 import (
 	"encoding/json"
-	"io"
+	"net/http"
+
+	"github.com/go-chi/chi/v5" // Important pour récupérer l'ID dans l'URL
+
 	"middleware/example/internal/helpers"
 	"middleware/example/internal/models"
 	services "middleware/example/internal/services/events"
-	"net/http"
-
-	"github.com/sirupsen/logrus"
 )
 
 // UpdateEvent
 // @Tags         events
 // @Summary      Update an event
-// @Description  Update an event by its UID (string)
+// @Description  Update an event by its ID (string)
 // @Accept       json
 // @Produce      json
-// @Param        id       path     string       true  "Event UID (string)"
+// @Param        id       path     string       true  "Event ID (string)"
 // @Param        agendaId query    string       true  "Agenda ID (string)"
 // @Param        event    body     models.Event true  "Event data to update"
 // @Success      200      {object} models.Event
 // @Failure      400      "Invalid JSON"
 // @Failure      404      "Event not found"
+// @Failure      422      "Unprocessable Entity"
 // @Failure      500      "Something went wrong"
 // @Router       /events/{id} [put]
 func UpdateEvent(w http.ResponseWriter, r *http.Request) {
-	ctx := r.Context()
-
-	uid, ok := ctx.Value("uid").(string)
-	if !ok || uid == "" {
-		errResp := &models.ErrorUnprocessableEntity{Message: "Invalid event UID in context"}
-		body, status := helpers.RespondError(errResp)
+	id := chi.URLParam(r, "id")
+	if id == "" {
+		body, status := helpers.RespondError(&models.ErrorUnprocessableEntity{
+			Message: "Missing Event ID in URL",
+		})
 		w.WriteHeader(status)
 		if body != nil {
 			_, _ = w.Write(body)
@@ -39,10 +39,11 @@ func UpdateEvent(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	agendaId := r.URL.Query().Get("agendaId")
-	if agendaId == "" {
-		errResp := &models.ErrorUnprocessableEntity{Message: "Missing agendaId query parameter"}
-		body, status := helpers.RespondError(errResp)
+	agendaID := r.URL.Query().Get("agendaId")
+	if agendaID == "" {
+		body, status := helpers.RespondError(&models.ErrorUnprocessableEntity{
+			Message: "Missing agendaId query parameter",
+		})
 		w.WriteHeader(status)
 		if body != nil {
 			_, _ = w.Write(body)
@@ -50,38 +51,27 @@ func UpdateEvent(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	body, err := io.ReadAll(r.Body)
-	if err != nil {
-		logrus.Errorf("Error reading request body: %s", err.Error())
-		errResp := &models.ErrorGeneric{Message: "Something went wrong"}
-		bodyResp, statusResp := helpers.RespondError(errResp)
-		w.WriteHeader(statusResp)
-		if bodyResp != nil {
-			_, _ = w.Write(bodyResp)
+	var eventToUpdate models.Event
+	if err := json.NewDecoder(r.Body).Decode(&eventToUpdate); err != nil {
+		body, status := helpers.RespondError(&models.ErrorUnprocessableEntity{
+			Message: "Invalid JSON format",
+		})
+		w.WriteHeader(status)
+		if body != nil {
+			_, _ = w.Write(body)
 		}
 		return
 	}
 	defer r.Body.Close()
 
-	var eventToUpdate models.Event
-	if err := json.Unmarshal(body, &eventToUpdate); err != nil {
-		errResp := &models.ErrorUnprocessableEntity{Message: "Invalid JSON format"}
-		bodyResp, statusResp := helpers.RespondError(errResp)
-		w.WriteHeader(statusResp)
-		if bodyResp != nil {
-			_, _ = w.Write(bodyResp)
-		}
-		return
-	}
-
-	eventToUpdate.UID = uid
-	eventToUpdate.AgendaID = agendaId
+	eventToUpdate.Id = id
+	eventToUpdate.AgendaID = agendaID
 
 	if err := services.UpdateEvent(&eventToUpdate); err != nil {
-		resp, status := helpers.RespondError(err)
+		body, status := helpers.RespondError(err)
 		w.WriteHeader(status)
-		if resp != nil {
-			_, _ = w.Write(resp)
+		if body != nil {
+			_, _ = w.Write(body)
 		}
 		return
 	}

@@ -2,51 +2,56 @@ package events
 
 import (
 	"encoding/json"
-	"io"
+	"net/http"
+
 	"middleware/example/internal/helpers"
 	"middleware/example/internal/models"
 	services "middleware/example/internal/services/events"
-	"net/http"
-
-	"github.com/sirupsen/logrus"
 )
 
 // CreateEvent
+// @Tags         events
+// @Summary      Create a new event
+// @Description  Create a new event with the provided JSON data
+// @Accept       json
+// @Produce      json
+// @Param        event    body     models.Event true  "Event data to create"
+// @Success      201      {object} models.Event
+// @Failure      400      "Invalid JSON"
+// @Failure      422      "Unprocessable Entity"
+// @Failure      500      "Something went wrong"
+// @Router       /events [post]
 func CreateEvent(w http.ResponseWriter, r *http.Request) {
-	body, err := io.ReadAll(r.Body)
+	// 1. Décodage du JSON reçu dans le body
+	var eventToCreate models.Event
+
+	// On utilise NewDecoder pour lire le flux directement (plus performant)
+	err := json.NewDecoder(r.Body).Decode(&eventToCreate)
 	if err != nil {
-		logrus.Errorf("Error reading request body: %s", err.Error())
-		resp, status := helpers.RespondError(&models.ErrorGeneric{Message: "Something went wrong"})
+		// Si le JSON est mal formé
+		body, status := helpers.RespondError(&models.ErrorUnprocessableEntity{
+			Message: "Invalid JSON format",
+		})
 		w.WriteHeader(status)
-		if resp != nil {
-			_, _ = w.Write(resp)
+		if body != nil {
+			_, _ = w.Write(body)
 		}
 		return
 	}
 	defer r.Body.Close()
 
-	var eventToCreate models.Event
-	if err := json.Unmarshal(body, &eventToCreate); err != nil {
-		resp, status := helpers.RespondError(&models.ErrorUnprocessableEntity{Message: "Invalid JSON format"})
+	// 2. Appel au Service
+	err = services.CreateEvent(&eventToCreate)
+	if err != nil {
+		body, status := helpers.RespondError(err)
 		w.WriteHeader(status)
-		if resp != nil {
-			_, _ = w.Write(resp)
+		if body != nil {
+			_, _ = w.Write(body)
 		}
 		return
 	}
 
-	//agendaId, _ := r.Context().Value("agendaId").(string)
-	//eventToCreate.AgendaID = agendaId
-
-	if err := services.CreateEvent(&eventToCreate); err != nil {
-		resp, status := helpers.RespondError(err)
-		w.WriteHeader(status)
-		if resp != nil {
-			_, _ = w.Write(resp)
-		}
-		return
-	}
-
+	// 3. Réponse Succès (201 Created)
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
 	_ = json.NewEncoder(w).Encode(eventToCreate)
