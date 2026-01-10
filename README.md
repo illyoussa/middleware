@@ -1,4 +1,4 @@
-## Groupe : Mohamed Kara, Illiès Maouda, Moundir Brahmi
+## Groupe : Mohamed Kara, Illyès Maouda, Moundir Brahmi
 
 ## Setup Golang
 ```
